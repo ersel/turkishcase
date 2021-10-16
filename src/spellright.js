@@ -21,12 +21,20 @@ const parser = require('../lib/parser');
 
 const { Deasciifier } = require("../lib/deasciifier");
 const { PATTERN_LIST } = require("../lib/deasciifier/compiled_templates.js");
+const asyncSeries = require('../lib/asyncSeries');
 
 Deasciifier.init(PATTERN_LIST);
 
 var bindings = {
-    isMisspelled: (word) => word !== Deasciifier.deasciify(word),
-    getCorrectionsForMisspelling: word => [Deasciifier.deasciify(word)]
+    isMisspelled: (word) => { 
+        if(!word) {
+            return false;
+        }
+        return word !== Deasciifier.deasciify(word).text 
+    },
+    getCorrectionsForMisspelling: word => { 
+       return [Deasciifier.deasciify(word).text] 
+    }
 }
 
 var settings = {};
@@ -48,7 +56,7 @@ var helpers = {
 
 var indicator = null;
 var controller = null;
-var turkishCaseChannel;
+// var turkishCaseChannel;
 
 var SpellRight = (function () {
 
@@ -60,7 +68,7 @@ var SpellRight = (function () {
         this.lastSyntax = 0;
         this.spellingContext = [];
         this.updateInterval = 1000;
-        turkishCaseChannel = vscode.window.createOutputChannel("Orange");
+        // turkishCaseChannel = vscode.window.createOutputChannel("Orange");
     }
 
     SpellRight.prototype.dispose = function () {
@@ -87,17 +95,10 @@ var SpellRight = (function () {
 
         subscriptions.push(this);
 
-        //
-        // Does not pass pressing of Ctrl alone. Could be useful for "replace
-        // all occurences" if it would.
-        // vscode.commands.registerCommand('type', function(args) {
-        //     ;
-        // });
-        //
-
         vscode.commands.registerCommand('spellright.configurationUpdate', this.configurationUpdate, this);
         vscode.commands.registerCommand('spellright.setCurrentTypeOFF', this.setCurrentTypeOFF, this);
         vscode.commands.registerCommand('spellright.setCurrentTypeON', this.setCurrentTypeON, this);
+        vscode.commands.registerCommand("spellright.fixAll", this.fixAll, this);
 
         this.suggestCommand = vscode.commands.registerCommand(
             SpellRight.suggestCommandId, this.fixSuggestionCodeAction, this);
@@ -400,9 +401,6 @@ var SpellRight = (function () {
         var _linenumber = linenumber;
         var _colnumber = colnumber;
 
-        if (SPELLRIGHT_DEBUG_OUTPUT && false) {
-            console.log('[spellright] Spell [' + context + ']: \"' + token.word + '\"');
-        }
 
         // Check if current context not disabled by syntatic control
         if (settings.spellContextByClass[document.languageId]) {
@@ -1265,6 +1263,56 @@ var SpellRight = (function () {
         }
 
         return commands;
+    };
+
+    SpellRight.prototype.fixAll = function () {
+        var editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        var document = editor.document;
+
+        var diagnostics = this.diagnosticMap[document.uri.toString()];
+        if(!diagnostics) {
+            return;
+        }
+
+        diagnostics.forEach(function (_diagnostics) {
+            if (_diagnostics.source == 'spelling' && _diagnostics.range.contains(vscode.window.activeTextEditor.selection)) {
+                diagnostics.push(_diagnostics);
+            }
+        });
+
+        if (diagnostics == []) return null;
+
+        if (settings.documentTypes.indexOf(document.languageId) == (-1) || (helpers._commands.ignore && !helpers._commands.force) || settings.language == []) {
+            return null;
+        }
+
+        asyncSeries(diagnostics, diagnostic => {
+            var rmatch = /\"(.*)\"/;
+            var match = rmatch.exec(diagnostic.message);
+            var word = '';
+            if (match.length >= 2)
+                word = match[1];
+            if (word.length == 0)
+                return undefined;
+
+            if (SPELLRIGHT_DEBUG_OUTPUT) {
+                console.log('[spellright] Providing code action for \"' + word + '\".');
+            }
+
+            if (word && word.length >= 1) {
+                var suggestions = bindings.getCorrectionsForMisspelling(word);
+
+                return asyncSeries(suggestions, suggestion => {
+                    var editFix = new vscode.WorkspaceEdit();
+                    editFix.replace(document.uri, diagnostic.range, suggestion);
+                    return vscode.workspace.applyEdit(editFix);
+                });
+            }
+            return Promise.resolve();
+        });
     };
 
     SpellRight.prototype.fixSuggestionCodeAction = function (document, diagnostic, word, suggestion) {

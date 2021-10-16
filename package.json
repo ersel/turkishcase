@@ -1,5 +1,5 @@
 {
-  "name": "SpellRight",
+  "name": "turkishcase",
   "displayName": "Turkish Case",
   "description": "Turkcelestir",
   "version": "0.0.1",
@@ -189,16 +189,16 @@
     },
     "commands": [
       {
-        "command": "spellright.configurationUpdate",
-        "title": "SpellRight: Configuration Update"
-      },
-      {
         "command": "spellright.setCurrentTypeOFF",
-        "title": "SpellRight: Turn OFF for Current Document Type"
+        "title": "TurkishCase: Turn OFF for Current Document Type"
       },
       {
         "command": "spellright.setCurrentTypeON",
-        "title": "SpellRight: Turn ON for Current Document Type"
+        "title": "TurkishCase: Turn ON for Current Document Type"
+      },
+      {
+        "command": "spellright.fixAll",
+        "title": "TurkishCase: Fix All"
       }
     ],
     "keybindings": []
