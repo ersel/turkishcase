@@ -13,6 +13,8 @@ global.SPELLRIGHT_STATUSBAR_ITEM_PRIORITY = (-1);
 
 const vscode = require('vscode');
 
+var SpellRight;
+
 function activate(context) {
     if (vscode.env.remoteName) {
         return;
@@ -33,7 +35,7 @@ function activate(context) {
         // });
     }
 
-    var SpellRight = new spellright.default();
+    SpellRight = new spellright.default();
 
     SpellRight.activate(context);
 }

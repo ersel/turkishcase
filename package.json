@@ -1,9 +1,9 @@
 {
-  "name": "spellright",
-  "displayName": "Spell Right",
-  "description": "Multilingual, Offline and Lightweight Spellchecker",
-  "version": "3.0.60",
-  "publisher": "ban",
+  "name": "SpellRight",
+  "displayName": "Turkish Case",
+  "description": "Turkcelestir",
+  "version": "0.0.1",
+  "publisher": "ersel-aker",
   "engines": {
     "vscode": "^1.46.0"
   },
@@ -11,11 +11,8 @@
     "Other"
   ],
   "keywords": [
-    "spell",
-    "checker",
-    "spellchecker",
-    "multi-language",
-    "offline"
+    "turkce",
+    "deasciifier"
   ],
   "activationEvents": [
     "*"
@@ -81,12 +78,6 @@
           "default": true,
           "scope": "resource",
           "description": "Enable/disable including suggested corrections in hints."
-        },
-        "spellright.addToSystemDictionary": {
-          "type": "boolean",
-          "default": false,
-          "scope": "resource",
-          "description": "Enable/disable adding words to system custom spelling dictionary instead of user dictionary."
         },
         "spellright.ignoreRegExps": {
           "type": "array",
@@ -202,35 +193,20 @@
         "title": "SpellRight: Configuration Update"
       },
       {
-        "command": "spellright.selectDictionary",
-        "title": "SpellRight: Select Dictionary (Language)"
-      },
-      {
         "command": "spellright.setCurrentTypeOFF",
         "title": "SpellRight: Turn OFF for Current Document Type"
       },
       {
-        "command": "spellright.openWorkspaceDictionary",
-        "title": "SpellRight: Open Workspace Dictionary File"
-      },
-      {
-        "command": "spellright.openUserDictionary",
-        "title": "SpellRight: Open User Dictionary File"
-      },
-      {
-        "command": "spellright.addFromSelectionToWorkspaceDictionary",
-        "title": "SpellRight: Add Selection to Workspace Dictionary"
-      },
-      {
-        "command": "spellright.addFromSelectionToUserDictionary",
-        "title": "SpellRight: Add Selection to User Dictionary"
+        "command": "spellright.setCurrentTypeON",
+        "title": "SpellRight: Turn ON for Current Document Type"
       }
     ],
     "keybindings": []
   },
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "node ./node_modules/vscode/bin/test"
+    "test": "node ./node_modules/vscode/bin/test",
+    "package": "vsce package && mv *.vsix .output/"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",
@@ -254,6 +230,7 @@
     "opn": "^5.1.0",
     "os-locale": "^2.0.0",
     "path": "^0.12.7",
+    "vsce": "^1.100.1",
     "xregexp": "^3.2.0"
   },
   "icon": "icon.png",
